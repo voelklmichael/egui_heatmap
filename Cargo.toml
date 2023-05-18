@@ -11,7 +11,7 @@ readme = "README.md"
 repository = "https://github.com/voelklmichael/egui_heatmap"
 categories = ["gui", "game-development", "data-science", "image"]
 keywords = ["gui", "imgui", "immediate", "portable", "gamedev", "data-science", "image"]
-include = ["LICENSE-APACHE", "LICENSE-MIT"]
+include = ["src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 
 [dependencies]
 arboard = "3.2.0"
