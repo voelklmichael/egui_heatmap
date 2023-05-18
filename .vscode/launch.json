@@ -1,0 +1,175 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'egui_heatmap'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=egui_heatmap"
+                ],
+                "filter": {
+                    "name": "egui_heatmap",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'single_map_circle'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=single_map_circle",
+                    "--package=egui_heatmap"
+                ],
+                "filter": {
+                    "name": "single_map_circle",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'single_map_circle'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=single_map_circle",
+                    "--package=egui_heatmap"
+                ],
+                "filter": {
+                    "name": "single_map_circle",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'multi_map_single'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=multi_map_single",
+                    "--package=egui_heatmap"
+                ],
+                "filter": {
+                    "name": "multi_map_single",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'multi_map_single'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=multi_map_single",
+                    "--package=egui_heatmap"
+                ],
+                "filter": {
+                    "name": "multi_map_single",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'multi_map_multi'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=multi_map_multi",
+                    "--package=egui_heatmap"
+                ],
+                "filter": {
+                    "name": "multi_map_multi",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'multi_map_multi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=multi_map_multi",
+                    "--package=egui_heatmap"
+                ],
+                "filter": {
+                    "name": "multi_map_multi",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'single_map'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=single_map",
+                    "--package=egui_heatmap"
+                ],
+                "filter": {
+                    "name": "single_map",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in example 'single_map'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--example=single_map",
+                    "--package=egui_heatmap"
+                ],
+                "filter": {
+                    "name": "single_map",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
