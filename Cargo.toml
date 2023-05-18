@@ -1,6 +1,6 @@
 [package]
 name = "egui_heatmap"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Michael Völkl <michaelvoelkl@zoho.com>"]
 description = "Navigatable heatmap for use together with egui"
 edition = "2021"
@@ -14,15 +14,15 @@ keywords = ["gui", "imgui", "immediate", "portable", "gamedev", "data-science", 
 include = ["LICENSE-APACHE", "LICENSE-MIT"]
 
 [dependencies]
-arboard = "*"
-eframe = "*"
-egui = "*"
-egui_extras = {version="*", features = ["image"]}
-font8x8 = "*"
-image = "*"
-oklab = "*"
-rusttype = "*"
+arboard = "3.2.0"
+eframe = "0.21.3"
+egui = "0.21.0"
+egui_extras = { version = "0.21.0", features = ["image"] }
+font8x8 = "0.3.1"
+image = "0.24.6"
+oklab = "1.0.0"
+rusttype = "0.9.3"
 
 [target.'cfg(windows)'.dependencies]
-clipboard-win = { version = "*", features = ["std"] }
+clipboard-win = { version = "4.5.0", features = ["std"] }
 
