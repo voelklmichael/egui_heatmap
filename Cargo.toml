@@ -9,7 +9,7 @@ homepage = "https://github.com/voelklmichael/egui_heatmap"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/voelklmichael/egui_heatmap"
-categories = ["gui", "data-science", "image"]
+categories = ["gui", "science", "visualization"]
 keywords = ["gui", "data-science", "image"]
 include = ["src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 
