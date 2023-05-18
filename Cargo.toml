@@ -14,15 +14,15 @@ keywords = ["gui", "imgui", "immediate", "portable", "gamedev", "data-science", 
 include = ["LICENSE-APACHE", "LICENSE-MIT"]
 
 [dependencies]
-arboard = "3.2.0"
-eframe = "0.21.3"
-egui = "0.21.0"
-egui_extras = {version="0.21.0", features = ["image"]}
-font8x8 = "0.3.1"
-image = "0.24.5"
-oklab = "1.0.0"
-rusttype = "0.9.3"
+arboard = "*"
+eframe = "*"
+egui = "*"
+egui_extras = {version="*", features = ["image"]}
+font8x8 = "*"
+image = "*"
+oklab = "*"
+rusttype = "*"
 
 [target.'cfg(windows)'.dependencies]
-clipboard-win = { version = "4.5.0", features = ["std"] }
+clipboard-win = { version = "*", features = ["std"] }
 
