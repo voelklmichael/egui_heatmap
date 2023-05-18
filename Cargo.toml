@@ -1,6 +1,6 @@
 [package]
 name = "egui_heatmap"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Michael Völkl <michaelvoelkl@zoho.com>"]
 description = "Navigatable heatmap for use together with egui"
 edition = "2021"
