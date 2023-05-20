@@ -418,7 +418,7 @@ impl<Key: Clone + PartialEq + Debug> MultiBitmapWidget<Key> {
                                 size[0] as u32,
                                 size[1] as u32,
                                 |x, y| {
-                                    let c = image[(size[0] as u32 * y + x) as usize];
+                                    let c = data[(size[0] as u32 * y + x) as usize];
                                     let (r, g, b, _a) = c.to_tuple();
                                     image::Rgb([r, g, b])
                                 },
@@ -431,7 +431,7 @@ impl<Key: Clone + PartialEq + Debug> MultiBitmapWidget<Key> {
                                 panic!("Failed to convert to png: {e}")
                             };
                             let image = writer.into_inner();
-                            if let Err(e) = clipboard_win::raw::set(fmt.into(), image) {
+                            if let Err(e) = clipboard_win::raw::set(fmt.into(), &image) {
                                 panic!("Failed to copy to clipboard: {e}");
                             }
                         }
