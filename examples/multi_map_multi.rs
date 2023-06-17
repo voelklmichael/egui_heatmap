@@ -125,7 +125,7 @@ impl eframe::App for MyApp {
                                         .join(", "),
                             );
 
-                            self.bitmap.ui(ui, ctx);
+                            self.bitmap.ui(ui);
                         },
                     );
                 },

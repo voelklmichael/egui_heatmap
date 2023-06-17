@@ -106,8 +106,8 @@ pub struct Overlay {
     overlay_indices: std::collections::HashMap<CoordinatePoint, usize>,
     overlay_bitmaps: Vec<BitMapText>,
     show_coordinates: bool,
-    title: BitMapText,
-}
+    title: String,
+} 
 impl Overlay {
     /// Constructor
     pub fn new(
@@ -116,7 +116,7 @@ impl Overlay {
         overlay_text: std::collections::HashMap<CoordinatePoint, String>,
         title: &str,
     ) -> Option<Self> {
-        let title = font.render(title)?;
+        //let title = font.render(title)?;
         let mut overlay_indices = std::collections::HashMap::default();
         let mut overlay_bitmaps = Vec::default();
         let mut overlay_strings = Vec::default();
@@ -141,7 +141,7 @@ impl Overlay {
             overlay_indices,
             overlay_bitmaps,
             show_coordinates,
-            title,
+            title: title.to_string(),
         })
     }
     /// Create an exampleary overlay
@@ -653,17 +653,33 @@ impl<Key, Color: Clone + GammyMultiplyable + BitMapDrawable> ShowMultiMap<Key, C
                         }
                         None
                     }; // add title
-                    let title = &data.overlay.title;
-                    draw_axis_label(
-                        &mut rendered,
-                        title,
-                        data_column * (width_per_data + self.boundary_between_data.thickness)
-                            + (width_per_data.saturating_sub(title.width as usize)) / 2,
-                        data_row * (height_per_data + self.boundary_between_data.thickness),
-                        render_width,
-                        data.overlay.font.background_is_transparent,
-                        &self.background,
-                    );
+                    {
+                        let title = &data.overlay.title;
+                        let mut font = data.overlay.font.clone();
+                        let mut title_to_draw = None;
+                        while font.font_height > 8. {
+                            if let Some(title) = font.render(title) {
+                                if (title.width as usize) < (width_per_data * 8 / 10) {
+                                    title_to_draw = Some(title);
+                                    break;
+                                }
+                            }
+                            font.font_height -= 1.0;
+                        }
+                        if let Some(title) = title_to_draw {
+                            draw_axis_label(
+                                &mut rendered,
+                                &title,
+                                data_column
+                                    * (width_per_data + self.boundary_between_data.thickness)
+                                    + (width_per_data.saturating_sub(title.width as usize)) / 2,
+                                data_row * (height_per_data + self.boundary_between_data.thickness),
+                                render_width,
+                                data.overlay.font.background_is_transparent,
+                                &self.background,
+                            );
+                        }
+                    }
                     // add overlays
                     if let Some((ox, oy)) = overlay_offset_lt {
                         for (pos, bitmap) in data.overlay.get_overlays() {
@@ -756,7 +772,7 @@ impl<Key, Color: Clone + GammyMultiplyable + BitMapDrawable> ShowMultiMap<Key, C
             for row in 0..height {
                 for column in 0..thickness {
                     let column = width - thickness + column;
-                    let c = gradient.element_at(row, height).remove_alpha();
+                    let c = gradient.element_at(height - 1 - row, height).remove_alpha();
                     rendered[column + row * width] = c;
                 }
             }
@@ -776,17 +792,22 @@ impl<Key, Color: Clone + GammyMultiplyable + BitMapDrawable> ShowMultiMap<Key, C
                 let count = std::cmp::max(2, count);
                 for (i, f) in (0..count)
                     .map(|i| lower + (upper - lower) / (count as f32 - 1.) * (i as f32))
+                    .rev()
                     .enumerate()
                 {
                     let mut bitmapfont = None;
-                    for max_precision in (0..5).rev() {
-                        let s = string_representation(f, max_precision);
-                        if let Some(font) = BitMapText::new(&s, font) {
-                            if font.width < thickness as i32 {
-                                bitmapfont = Some(font);
-                                break;
+                    let mut font = font.clone();
+                    'outer: while font.font_height > 8. {
+                        for max_precision in (1..5).rev() {
+                            let s = string_representation(f, max_precision);
+                            if let Some(font) = BitMapText::new(&s, &font) {
+                                if font.width < thickness as i32 {
+                                    bitmapfont = Some(font);
+                                    break 'outer;
+                                }
                             }
                         }
+                        font.font_height -= 1.;
                     }
                     let f = if let Some(bitmapfont) = bitmapfont {
                         bitmapfont

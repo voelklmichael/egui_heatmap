@@ -204,9 +204,9 @@ impl<Key: Clone + PartialEq + Debug> MultiBitmapWidget<Key> {
         } else {
             MultiMapPosition::NotHovering
         }
-    }
+    } 
     /// Show widget
-    pub fn ui(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+    pub fn ui(&mut self, ui: &mut egui::Ui) {
         if let Some((before, size)) = self.copy_to_clipboard_delay {
             let now = std::time::Instant::now();
             if now - before > COPY_CLIPBOARD_DELAY {
@@ -216,7 +216,8 @@ impl<Key: Clone + PartialEq + Debug> MultiBitmapWidget<Key> {
         }
         let size = self.update_size(ui.available_size());
         self.render();
-        let image = ui.image(self.rendered_image.texture_id(ctx), size);
+        let rendered = self.rendered_image.texture_id(ui.ctx());
+        let image = ui.image(rendered, size);
 
         let image = image.interact(egui::Sense::click_and_drag());
 
@@ -264,7 +265,7 @@ impl<Key: Clone + PartialEq + Debug> MultiBitmapWidget<Key> {
                 }
                 if ui.button("Copy to Clipboard in 3 seconds").clicked() {
                     self.copy_to_clipboard_delay = Some((std::time::Instant::now(), size));
-                    ctx.request_repaint_after(COPY_CLIPBOARD_DELAY);
+                    ui.ctx().request_repaint_after(COPY_CLIPBOARD_DELAY);
                     ui.close_menu()
                 }
             });
@@ -280,7 +281,8 @@ impl<Key: Clone + PartialEq + Debug> MultiBitmapWidget<Key> {
         } else if image.clicked() {
             if let Some(pos) = self.mouse.get_pos() {
                 self.clicked = true;
-                self.showmap.select(pos, ctx.input(|x| x.modifiers.ctrl));
+                self.showmap
+                    .select(pos, ui.ctx().input(|x| x.modifiers.ctrl));
                 self.needs_rendering = true;
             }
         }
@@ -305,8 +307,8 @@ impl<Key: Clone + PartialEq + Debug> MultiBitmapWidget<Key> {
         }
 
         // keyboard movement and zoom and homeing
-        if image.hovered() && ctx.memory(|x| x.focus().is_none()) {
-            if let Some((key, modifiers)) = ctx.input(|x| {
+        if image.hovered() && ui.ctx().memory(|x| x.focus().is_none()) {
+            if let Some((key, modifiers)) = ui.ctx().input(|x| {
                 let keys = &x.keys_down;
                 if keys.len() == 1 {
                     Some((*keys.iter().next().unwrap(), x.modifiers))
@@ -345,7 +347,7 @@ impl<Key: Clone + PartialEq + Debug> MultiBitmapWidget<Key> {
         }
         // mouse scroll
         if image.hovered() {
-            let (scroll_delta, modifiers) = ctx.input(|x| (x.scroll_delta, x.modifiers));
+            let (scroll_delta, modifiers) = ui.ctx().input(|x| (x.scroll_delta, x.modifiers));
             let scroll_delta = if modifiers.shift {
                 scroll_delta.x * 5. //TODO: make this magnifier configurable
             } else {

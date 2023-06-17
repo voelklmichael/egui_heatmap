@@ -56,10 +56,10 @@ impl BitmapWidget {
     }
 
     /// Show widget
-    pub fn ui(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
-        self.map.ui(ui, ctx)
+    pub fn ui(&mut self, ui: &mut egui::Ui) {
+        self.map.ui(ui)
     }
-
+ 
     /// Get the currently selected points
     pub fn selected(&self) -> impl ExactSizeIterator<Item = &CoordinatePoint> {
         self.map.selected()

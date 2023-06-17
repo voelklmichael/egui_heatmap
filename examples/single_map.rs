@@ -19,6 +19,7 @@ fn main() -> Result<(), eframe::Error> {
 }
 struct MyApp {
     bitmap: BitmapWidget,
+    scroll_area: bool,
 }
 
 impl Default for MyApp {
@@ -60,6 +61,7 @@ impl Default for MyApp {
                 ),
                 settings,
             ),
+            scroll_area: true,
         }
     }
 }
@@ -71,7 +73,18 @@ impl eframe::App for MyApp {
                 egui::Layout::left_to_right(egui::Align::BOTTOM).with_cross_justify(true),
                 |ui| {
                     ui.vertical(|ui| {
-                        egui::scroll_area::ScrollArea::new([true, true]).show(ui, |ui| {
+                        ui.checkbox(&mut self.scroll_area, "ScrollArea");
+                        if self.scroll_area {
+                            egui::scroll_area::ScrollArea::new([true, true]).show(ui, |ui| {
+                                egui::Grid::new("grid").num_columns(2).show(ui, |ui| {
+                                    for i in 0..125 {
+                                        ui.label("ae Row:");
+                                        ui.label(&i.to_string());
+                                        ui.end_row()
+                                    }
+                                });
+                            });
+                        } else {
                             egui::Grid::new("grid").num_columns(2).show(ui, |ui| {
                                 for i in 0..125 {
                                     ui.label("ae Row:");
@@ -79,7 +92,7 @@ impl eframe::App for MyApp {
                                     ui.end_row()
                                 }
                             });
-                        });
+                        }
                     });
                     ui.with_layout(
                         egui::Layout::bottom_up(egui::Align::LEFT).with_cross_justify(true),
@@ -115,7 +128,7 @@ impl eframe::App for MyApp {
                                         .join(", "),
                             );
 
-                            self.bitmap.ui(ui, ctx);
+                            self.bitmap.ui(ui);
                         },
                     );
                 },
