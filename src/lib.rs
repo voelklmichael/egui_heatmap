@@ -26,7 +26,8 @@ pub use font::{BitMapText, Font, FontOptions};
 pub type Color = egui::Color32;
 pub use bitmap_widget_multi::{
     ColorWithThickness, CoordinatePoint, CoordinateRect, Data, Event, MultiBitmapWidget,
-    MultiBitmapWidgetSettings, MultiMapPosition, Overlay,
+    MultiBitmapWidgetSettings, MultiMapPosition, Overlay, ShowState,
 };
 
-pub use bitmap_widget_single::{BitmapWidget, MapPosition};
+pub use bitmap_widget_single::{BitmapWidget, MapPosition, ShowStateSingle};
+

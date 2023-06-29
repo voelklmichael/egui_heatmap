@@ -3,6 +3,7 @@
 use eframe::egui;
 use egui_heatmap::{
     BitmapWidget, Color, ColorWithThickness, MapPosition, MultiBitmapWidgetSettings,
+    ShowStateSingle,
 };
 
 fn main() -> Result<(), eframe::Error> {
@@ -17,9 +18,11 @@ fn main() -> Result<(), eframe::Error> {
         Box::new(|_cc| Box::<MyApp>::default()),
     )
 }
+
 struct MyApp {
     bitmap: BitmapWidget,
     scroll_area: bool,
+    state: ShowStateSingle,
 }
 
 impl Default for MyApp {
@@ -51,17 +54,18 @@ impl Default for MyApp {
             boundary_selected: Color::WHITE,
             boundary_factor_min: 3,
         };
-
-        Self {
-            bitmap: BitmapWidget::with_settings(
-                egui_heatmap::Data::<Color>::example(
-                    10,
-                    20,
-                    egui_heatmap::CoordinatePoint { x: 2, y: 8 },
-                ),
-                settings,
+        let bitmap = BitmapWidget::with_settings(
+            egui_heatmap::Data::<Color>::example(
+                10,
+                20,
+                egui_heatmap::CoordinatePoint { x: 2, y: 8 },
             ),
+            settings,
+        );
+        Self {
             scroll_area: true,
+            state: bitmap.default_state_english(),
+            bitmap,
         }
     }
 }
@@ -97,13 +101,13 @@ impl eframe::App for MyApp {
                     ui.with_layout(
                         egui::Layout::bottom_up(egui::Align::LEFT).with_cross_justify(true),
                         |ui| {
-                            let problem = self.bitmap.problem().map_or_else(
+                            let problem = self.state.render_problem().map_or_else(
                                 || "no problems".to_string(),
                                 |e| format!("Problem: {e:?}"),
                             );
                             ui.label(problem);
                             // mouse over text
-                            let text = match self.bitmap.hover() {
+                            let text = match self.state.hover() {
                                 MapPosition::NotHovering => "-----".to_owned(),
                                 MapPosition::NoData(egui_heatmap::CoordinatePoint { x, y }) => {
                                     format!("no data at {x}|{y}")
@@ -119,8 +123,9 @@ impl eframe::App for MyApp {
                             ui.label(
                                 "Selected: ".to_owned()
                                     + &self
-                                        .bitmap
+                                        .state
                                         .selected()
+                                        .iter()
                                         .map(|egui_heatmap::CoordinatePoint { x, y }| {
                                             format!("({x}|{y})")
                                         })
@@ -128,7 +133,7 @@ impl eframe::App for MyApp {
                                         .join(", "),
                             );
 
-                            self.bitmap.ui(ui);
+                            self.bitmap.ui(ui, &mut self.state);
                         },
                     );
                 },

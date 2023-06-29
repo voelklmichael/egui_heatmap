@@ -2,6 +2,7 @@
 use eframe::egui;
 use egui_heatmap::{
     Color, ColorWithThickness, MultiBitmapWidget, MultiBitmapWidgetSettings, MultiMapPosition,
+    ShowState,
 };
 
 fn main() -> Result<(), eframe::Error> {
@@ -16,8 +17,10 @@ fn main() -> Result<(), eframe::Error> {
         Box::new(|_cc| Box::<MyApp>::default()),
     )
 }
+
 struct MyApp {
     bitmap: MultiBitmapWidget<usize>,
+    state: ShowState<usize>,
 }
 
 impl Default for MyApp {
@@ -49,31 +52,32 @@ impl Default for MyApp {
             boundary_selected: Color::WHITE,
             boundary_factor_min: 3,
         };
-
+        let bitmap = MultiBitmapWidget::with_settings(
+            vec![
+                egui_heatmap::Data::<Color>::example(
+                    10,
+                    20,
+                    egui_heatmap::CoordinatePoint { x: 2, y: 8 },
+                ),
+                egui_heatmap::Data::<Color>::example(
+                    10,
+                    20,
+                    egui_heatmap::CoordinatePoint { x: 10, y: 8 },
+                ),
+                egui_heatmap::Data::<Color>::example(
+                    20,
+                    40,
+                    egui_heatmap::CoordinatePoint { x: 0, y: 0 },
+                ),
+            ]
+            .into_iter()
+            .enumerate()
+            .collect(),
+            settings,
+        );
         Self {
-            bitmap: MultiBitmapWidget::with_settings(
-                vec![
-                    egui_heatmap::Data::<Color>::example(
-                        10,
-                        20,
-                        egui_heatmap::CoordinatePoint { x: 2, y: 8 },
-                    ),
-                    egui_heatmap::Data::<Color>::example(
-                        10,
-                        20,
-                        egui_heatmap::CoordinatePoint { x: 10, y: 8 },
-                    ),
-                    egui_heatmap::Data::<Color>::example(
-                        20,
-                        40,
-                        egui_heatmap::CoordinatePoint { x: 0, y: 0 },
-                    ),
-                ]
-                .into_iter()
-                .enumerate()
-                .collect(),
-                settings,
-            ),
+            state: bitmap.default_state_english(),
+            bitmap,
         }
     }
 }
@@ -85,18 +89,18 @@ impl eframe::App for MyApp {
                 egui::Layout::left_to_right(egui::Align::BOTTOM).with_cross_justify(true),
                 |ui| {
                     ui.vertical(|ui| {
-                        ui.label("bla");                        
+                        ui.label("bla");
                     });
                     ui.with_layout(
                         egui::Layout::bottom_up(egui::Align::LEFT).with_cross_justify(true),
                         |ui| {
-                            let problem = self.bitmap.problem().map_or_else(
+                            let problem = self.state.render_problem().map_or_else(
                                 || "no problems".to_string(),
                                 |e| format!("Problem: {e:?}"),
                             );
                             ui.label(problem);
                             // mouse over text
-                            let text = match self.bitmap.hover() {
+                            let text = match self.state.hover() {
                                 MultiMapPosition::NotHovering => "-----".to_owned(),
                                 MultiMapPosition::NoData(
                                     key,
@@ -116,16 +120,27 @@ impl eframe::App for MyApp {
                             ui.label(
                                 "Selected: ".to_owned()
                                     + &self
-                                        .bitmap
+                                        .state
                                         .selected()
+                                        .iter()
                                         .map(|egui_heatmap::CoordinatePoint { x, y }| {
                                             format!("({x}|{y})")
                                         })
                                         .collect::<Vec<_>>()
                                         .join(", "),
                             );
+                            ui.label(
+                                "Events: ".to_owned()
+                                    + &self
+                                        .state
+                                        .events()
+                                        .into_iter()
+                                        .map(|e| format!("{e:?}"))
+                                        .collect::<Vec<_>>()
+                                        .join(", "),
+                            );
 
-                            self.bitmap.ui(ui);
+                            self.bitmap.ui(ui, &mut self.state);
                         },
                     );
                 },

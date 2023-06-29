@@ -34,34 +34,53 @@ pub struct BitmapWidget {
     map: MultiBitmapWidget<()>,
 }
 
+
 impl BitmapWidget {
-    /// Fetch array which is currently shown
-    pub fn currently_showing(&self) -> crate::CoordinateRect {
-        self.map.currently_showing()
-    }
     /// Main Constructor. This assumes that the data coordinates are linearly and axis-aligned to the bitmap, but the left-top corner can be adjusted for each subplot
     pub fn with_settings(data: Data<Color>, settings: crate::MultiBitmapWidgetSettings) -> Self {
         Self {
             map: MultiBitmapWidget::with_settings(vec![((), data)], settings),
         }
     }
-
-    /// Check if widget is hovered
-    pub fn hover(&self) -> MapPosition {
-        self.map.hover().into()
+    /// Get default state, in english
+    pub fn default_state_english(&self) -> ShowStateSingle {
+        ShowStateSingle {
+            state: self.map.default_state_english(),
+        }
     }
-    /// Check if there was a problem during the last rendering pass
-    pub fn problem(&self) -> Option<RenderProblem> {
-        self.map.problem()
-    }
-
     /// Show widget
-    pub fn ui(&mut self, ui: &mut egui::Ui) {
-        self.map.ui(ui)
+    pub fn ui(&mut self, ui: &mut egui::Ui, state: &mut ShowStateSingle) {
+        self.map.ui(ui, &mut state.state)
     }
- 
+}
+
+/// This encodes the current state of the heatmap
+pub struct ShowStateSingle {
+    state: crate::bitmap_widget_multi::ShowState<()>,
+}
+impl ShowStateSingle {
+    /// Get events
+    pub fn events(&mut self) -> Vec<crate::Event<()>> {
+        self.state.events()
+    }
     /// Get the currently selected points
-    pub fn selected(&self) -> impl ExactSizeIterator<Item = &CoordinatePoint> {
-        self.map.selected()
+    pub fn selected(&self) -> &std::collections::HashSet<CoordinatePoint> {
+        self.state.selected()
+    }
+    /// Fetch rectangle which is currently shown
+    pub fn currently_showing(&self) -> crate::CoordinateRect {
+        self.state.currently_showing()
+    }
+    /// Check if there was an issue will rendering
+    pub fn render_problem(&self) -> Option<&RenderProblem> {
+        self.state.render_problem()
+    }
+    /// Check if position was clicked
+    pub fn clicked(&self) -> Option<MapPosition> {
+        self.state.clicked().cloned().map(Into::into)
+    }
+    /// Check if position was clicked
+    pub fn hover(&self) -> MapPosition {
+        self.state.hover().clone().into()
     }
 }
