@@ -319,9 +319,10 @@ impl<Key: std::hash::Hash + Clone + Eq + Debug> MultiBitmapWidget<Key> {
         let size = self.update_size(ui.available_size());
         self.render(state);
         let rendered = self.rendered_image.texture_id(ui.ctx());
-        let image = ui.image(rendered, size);
-
-        let image = image.interact(egui::Sense::click_and_drag());
+        let image = egui::Widget::ui(
+            egui::Image::new(rendered, size).sense(egui::Sense::click_and_drag()),
+            ui,
+        );
 
         let mouse = image.hover_pos();
         let rect = image.rect;
