@@ -1363,7 +1363,7 @@ fn render_simple_tests() {
     }
     let width = 66;
     let height = 23;
-    let state = dummy_data().default_state();
+    let mut state = dummy_data().default_state();
     let rendered = dummy_data().render(width, height, &mut state).unwrap();
     dbg!((width, height));
     for (i, line) in rendered
@@ -1409,8 +1409,8 @@ fn render_simple_tests2() {
     }
     let width = 66;
     let height = 23;
-    let state = dummy_data().default_state();
-    let rendered = dummy_data().render(width, height, &state).unwrap();
+    let mut state = dummy_data().default_state();
+    let rendered = dummy_data().render(width, height, &mut state).unwrap();
     dbg!((width, height));
     for (i, line) in rendered
         .chunks(width)
