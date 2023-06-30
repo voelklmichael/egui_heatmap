@@ -58,6 +58,14 @@ pub struct ShowStateSingle {
     state: crate::bitmap_widget_multi::ShowState<()>,
 }
 impl ShowStateSingle {
+    /// Select the given positions and only those
+    pub fn make_selected(&mut self, selected:std::collections::HashSet<CoordinatePoint>){
+        self.state.make_selected(selected)
+    }
+    /// Clear selected positions
+    pub fn clear_selected(&mut self){
+        self.state.clear_selected()
+    }
     /// Get events
     pub fn events(&mut self) -> Vec<crate::Event<()>> {
         self.state.events()

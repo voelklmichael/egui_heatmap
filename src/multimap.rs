@@ -8,7 +8,8 @@ pub enum KeyBoardDirection {
     Left,
     Right,
 }
-pub(crate) struct MultimapState<Key> {
+#[derive(serde::Deserialize, serde::Serialize, Default)]
+pub(crate) struct MultimapState<Key: Eq + std::hash::Hash> {
     pub to_plot: std::collections::HashMap<Key, bool>,
     pub selected: std::collections::HashSet<CoordinatePoint>,
     pub shown_rectangle: Option<ShowRect>,
@@ -34,7 +35,9 @@ impl<Key: std::hash::Hash + Eq> MultimapState<Key> {
     }
 }
 /// This is a point, using the user-given coordinate system
-#[derive(Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Clone)]
+#[derive(
+    Hash, PartialEq, Eq, PartialOrd, Ord, Debug, Clone, serde::Deserialize, serde::Serialize,
+)]
 pub struct CoordinatePoint {
     /// Column
     pub x: i32,
@@ -56,12 +59,12 @@ pub struct MultiMapPoint {
     pub y: usize,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, serde::Deserialize, serde::Serialize)]
 struct ShowPoint {
     x: i32,
     y: i32,
 }
-#[derive(Default, Clone)]
+#[derive(Default, Clone, serde::Deserialize, serde::Serialize)]
 pub(crate) struct ShowRect {
     left_top: ShowPoint,
     // this is right below of the last point, similiar to that an array length points "behind" the array
@@ -330,7 +333,7 @@ pub(crate) struct ShowMultiMap<Key, Color> {
     drag_area: Option<((CoordinatePoint, CoordinatePoint), CoordinatePoint)>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub enum RenderProblem {
     CountIsZero,
     WidthSmallerThanColorBar,

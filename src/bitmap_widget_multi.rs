@@ -8,6 +8,7 @@ pub use crate::multimap::{
 use egui::Color32 as Color;
 use egui_extras::RetainedImage as RenderedImage;
 
+#[derive(serde::Deserialize, serde::Serialize, Default)]
 pub struct Localization {
     text_copy_to_clipboard_delayed: String, //"Copy to Clipboard in 3 seconds"
     text_copy_to_clipboard_instantly: String, //"Copy to Clipboard"
@@ -30,7 +31,8 @@ impl Localization {
     }
 }
 /// This encodes the current state of the heatmap
-pub struct ShowState<Key> {
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct ShowState<Key: Eq + std::hash::Hash> {
     multimap: crate::multimap::MultimapState<Key>,
     localization: Localization,
 
@@ -40,7 +42,7 @@ pub struct ShowState<Key> {
     events: Vec<Event<Key>>,
 }
 /// Events which happend to the heatmap
-#[derive(Debug)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub enum Event<Key> {
     /// A dataset shall be hidden
     Hide(Key),
@@ -56,6 +58,14 @@ pub enum Event<Key> {
     Selection,
 }
 impl<Key: std::hash::Hash + Eq + Clone> ShowState<Key> {
+    /// Select the given positions and only those
+    pub fn make_selected(&mut self, selected: std::collections::HashSet<CoordinatePoint>) {
+        self.multimap.selected = selected;
+    }
+    /// Clear selected positions
+    pub fn clear_selected(&mut self) {
+        self.multimap.selected.clear();
+    }
     /// Get events
     pub fn events(&mut self) -> Vec<Event<Key>> {
         std::mem::take(&mut self.events)
@@ -134,7 +144,7 @@ impl<Key: std::hash::Hash + Eq + Clone> ShowState<Key> {
 }
 
 /// Hover type
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub enum MultiMapPosition<Key> {
     /// Mouse is not hovering over widget
     NotHovering,
