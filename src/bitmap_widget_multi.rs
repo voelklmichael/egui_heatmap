@@ -65,7 +65,7 @@ impl<Key: std::hash::Hash + Eq + Clone> ShowState<Key> {
         &self.multimap.selected
     }
     /// Fetch rectangle which is currently shown
-    pub fn currently_showing(&self) -> CoordinateRect {
+    pub fn currently_showing(&self) -> Option<CoordinateRect> {
         self.multimap.currently_showing()
     }
     /// Check if there was an issue will rendering
@@ -117,8 +117,10 @@ impl<Key: std::hash::Hash + Eq + Clone> ShowState<Key> {
     }
 
     fn change_rect(&mut self) -> &mut crate::multimap::ShowRect {
-        self.events.push(Event::ShowRectangle);
-        &mut self.multimap.shown_rectangle
+        self.multimap
+            .shown_rectangle
+            .as_mut()
+            .expect("'Render' has to be called before this")
     }
 
     fn change_selected(&mut self) -> &mut std::collections::HashSet<CoordinatePoint> {
@@ -127,7 +129,6 @@ impl<Key: std::hash::Hash + Eq + Clone> ShowState<Key> {
     }
 
     fn get_inner_mut(&mut self) -> &mut crate::multimap::MultimapState<Key> {
-        self.events.push(Event::ShowRectangle);
         &mut self.multimap
     }
 }
@@ -307,6 +308,7 @@ impl<Key: std::hash::Hash + Clone + Eq + Debug> MultiBitmapWidget<Key> {
     }
     /// Show widget
     pub fn ui(&mut self, ui: &mut egui::Ui, state: &mut ShowState<Key>) {
+        let shown_before = state.currently_showing();
         if let Some((before, size)) = self.copy_to_clipboard_delay {
             let now = std::time::Instant::now();
             if now - before > COPY_CLIPBOARD_DELAY {
@@ -485,6 +487,10 @@ impl<Key: std::hash::Hash + Clone + Eq + Debug> MultiBitmapWidget<Key> {
                 }
             }
         }
+        // shown area changed
+        if state.currently_showing() != shown_before {
+            state.events.push(Event::ShowRectangle);
+        }
     }
 
     fn update_size(&mut self, available_size: egui::Vec2) -> [f32; 2] {
@@ -505,7 +511,7 @@ impl<Key: std::hash::Hash + Clone + Eq + Debug> MultiBitmapWidget<Key> {
             self.needs_rendering = false;
             let w = self.current_size[0] as usize;
             let h = self.current_size[1] as usize;
-            let (image, problem) = match self.showmap.render(w, h, &state.multimap) {
+            let (image, problem) = match self.showmap.render(w, h, &mut state.multimap) {
                 Ok(image) => (
                     egui::ColorImage {
                         size: [w, h],
@@ -520,10 +526,10 @@ impl<Key: std::hash::Hash + Clone + Eq + Debug> MultiBitmapWidget<Key> {
         }
     }
 
-    fn copy_to_clipboard(&self, size: [f32; 2], state: &ShowState<Key>) {
+    fn copy_to_clipboard(&self, size: [f32; 2], state: &mut ShowState<Key>) {
         let width = size[0] as usize;
         let height = size[1] as usize;
-        match self.showmap.render(width, height, &state.multimap) {
+        match self.showmap.render(width, height, &mut state.multimap) {
             Ok(data) => {
                 #[cfg(target_os = "windows")]
                 {

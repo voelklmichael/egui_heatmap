@@ -34,7 +34,6 @@ pub struct BitmapWidget {
     map: MultiBitmapWidget<()>,
 }
 
-
 impl BitmapWidget {
     /// Main Constructor. This assumes that the data coordinates are linearly and axis-aligned to the bitmap, but the left-top corner can be adjusted for each subplot
     pub fn with_settings(data: Data<Color>, settings: crate::MultiBitmapWidgetSettings) -> Self {
@@ -68,7 +67,7 @@ impl ShowStateSingle {
         self.state.selected()
     }
     /// Fetch rectangle which is currently shown
-    pub fn currently_showing(&self) -> crate::CoordinateRect {
+    pub fn currently_showing(&self) -> Option<crate::CoordinateRect> {
         self.state.currently_showing()
     }
     /// Check if there was an issue will rendering

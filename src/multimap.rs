@@ -11,21 +11,25 @@ pub enum KeyBoardDirection {
 pub(crate) struct MultimapState<Key> {
     pub to_plot: std::collections::HashMap<Key, bool>,
     pub selected: std::collections::HashSet<CoordinatePoint>,
-    pub shown_rectangle: ShowRect,
+    pub shown_rectangle: Option<ShowRect>,
 }
 
 impl<Key: std::hash::Hash + Eq> MultimapState<Key> {
     fn to_plot(&self, key: &Key) -> bool {
         self.to_plot.get(key).cloned().unwrap_or(true)
     }
-    pub(crate) fn currently_showing(&self) -> CoordinateRect {
-        let ShowRect {
+    pub(crate) fn currently_showing(&self) -> Option<CoordinateRect> {
+        if let Some(ShowRect {
             left_top,
             right_bottom,
-        } = &self.shown_rectangle;
-        CoordinateRect {
-            left_top: left_top - &CoordinatePoint { x: 0, y: 0 },
-            right_bottom: right_bottom - &CoordinatePoint { x: 0, y: 0 },
+        }) = &self.shown_rectangle
+        {
+            Some(CoordinateRect {
+                left_top: left_top - &CoordinatePoint { x: 0, y: 0 },
+                right_bottom: right_bottom - &CoordinatePoint { x: 0, y: 0 },
+            })
+        } else {
+            None
         }
     }
 }
@@ -52,10 +56,12 @@ pub struct MultiMapPoint {
     pub y: usize,
 }
 
+#[derive(Default, Clone)]
 struct ShowPoint {
     x: i32,
     y: i32,
 }
+#[derive(Default, Clone)]
 pub(crate) struct ShowRect {
     left_top: ShowPoint,
     // this is right below of the last point, similiar to that an array length points "behind" the array
@@ -63,7 +69,7 @@ pub(crate) struct ShowRect {
 }
 
 /// This is a rectangle in the user-given coordinate system.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct CoordinateRect {
     /// Left top starting point of rectangle
     pub left_top: CoordinatePoint,
@@ -321,7 +327,6 @@ pub(crate) struct ShowMultiMap<Key, Color> {
     boundary_unselected: ColorWithThickness<Color>,
     boundary_selected: Color,
     boundary_factor_min: usize,
-    //selected: std::collections::HashSet<CoordinatePoint>,
     drag_area: Option<((CoordinatePoint, CoordinatePoint), CoordinatePoint)>,
 }
 
@@ -329,6 +334,7 @@ pub(crate) struct ShowMultiMap<Key, Color> {
 pub enum RenderProblem {
     CountIsZero,
     WidthSmallerThanColorBar,
+    NoData,
 }
 
 pub(crate) struct ShowMultiMapSettings<Color> {
@@ -348,7 +354,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
 
         MultimapState {
             selected: Default::default(),
-            shown_rectangle: home_rect(&self.data, &to_plot),
+            shown_rectangle: None,
             to_plot,
         }
     }
@@ -379,8 +385,17 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
         &self,
         width: usize,
         height: usize,
-        state: &MultimapState<Key>,
+        state: &mut MultimapState<Key>,
     ) -> Result<Vec<Color>, RenderProblem> {
+        if state.shown_rectangle.is_none() {
+            if self.data.is_empty() {
+                return Err(RenderProblem::NoData);
+            } else {
+                state.shown_rectangle = Some(home_rect(&self.data, &state.to_plot));
+            }
+        }
+        let shown_rectangle = state.shown_rectangle.as_ref().unwrap();
+
         let mut data_sets = self
             .data
             .iter()
@@ -394,6 +409,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
             .rev()
             .collect::<Vec<_>>();
         let count = data_sets.len();
+
         if count == 0 {
             return Err(RenderProblem::CountIsZero);
         }
@@ -487,7 +503,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                 }
                 // render data
                 if let Some(data) = data_sets.pop() {
-                    let shown_rectangle = &state.shown_rectangle - &CoordinatePoint { x: 0, y: 0 };
+                    let shown_rectangle = shown_rectangle - &CoordinatePoint { x: 0, y: 0 };
                     let delta = shown_rectangle.delta();
                     let width_per_point = width_per_data / delta.x;
                     let height_per_point = height_per_data / delta.y;
@@ -511,7 +527,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                                         if column + boundary_thickness >= offset_x {
                                             is_boundary = true;
                                         }
-                                        state.shown_rectangle.left_top.x - 1
+                                        shown_rectangle.left_top.x - 1
                                     } else {
                                         let column = column - offset_x;
                                         let x = column / width_per_point;
@@ -521,13 +537,13 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                                         {
                                             is_boundary = true;
                                         }
-                                        state.shown_rectangle.left_top.x + x as i32
+                                        shown_rectangle.left_top.x + x as i32
                                     };
                                     let y = if row < offset_y {
                                         if row + boundary_thickness >= offset_y {
                                             is_boundary = true;
                                         }
-                                        state.shown_rectangle.left_top.y - 1
+                                        shown_rectangle.left_top.y - 1
                                     } else {
                                         let row = row - offset_y;
                                         let y = row / height_per_point;
@@ -537,7 +553,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                                         {
                                             is_boundary = true;
                                         }
-                                        state.shown_rectangle.left_top.y + y as i32
+                                        shown_rectangle.left_top.y + y as i32
                                     };
                                     RenderPoint {
                                         coordinate: CoordinatePoint { x, y },
@@ -577,7 +593,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                                         if column + boundary_thickness >= offset_x {
                                             is_boundary = true;
                                         }
-                                        state.shown_rectangle.left_top.x - 1
+                                        shown_rectangle.left_top.x - 1
                                     } else {
                                         let column = column - offset_x;
                                         let x = column / width_per_point;
@@ -587,7 +603,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                                         {
                                             is_boundary = true;
                                         }
-                                        state.shown_rectangle.left_top.x + x as i32
+                                        shown_rectangle.left_top.x + x as i32
                                     };
                                     let y = row * delta.y / height_per_data;
                                     let y = shown_rectangle.left_top.y + y as i32;
@@ -631,7 +647,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                                         if row + boundary_thickness >= offset_y {
                                             is_boundary = true;
                                         }
-                                        state.shown_rectangle.left_top.y - 1
+                                        shown_rectangle.left_top.y - 1
                                     } else {
                                         let row = row - offset_y;
                                         let y = row / height_per_point;
@@ -641,7 +657,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                                         {
                                             is_boundary = true;
                                         }
-                                        state.shown_rectangle.left_top.y + y as i32
+                                        shown_rectangle.left_top.y + y as i32
                                     };
                                     RenderPoint {
                                         coordinate: CoordinatePoint { x, y },
@@ -724,15 +740,15 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                     // add overlays
                     if let Some((ox, oy)) = overlay_offset_lt {
                         for (pos, bitmap) in data.overlay.get_overlays() {
-                            if pos.x >= state.shown_rectangle.left_top.x
-                                && pos.y >= state.shown_rectangle.left_top.y
-                                && pos.x < state.shown_rectangle.right_bottom.x
-                                && pos.y < state.shown_rectangle.right_bottom.y
+                            if pos.x >= shown_rectangle.left_top.x
+                                && pos.y >= shown_rectangle.left_top.y
+                                && pos.x < shown_rectangle.right_bottom.x
+                                && pos.y < shown_rectangle.right_bottom.y
                                 && bitmap.width as usize <= width_per_point
                                 && bitmap.height as usize <= height_per_point
                             {
-                                let dx = (pos.x - state.shown_rectangle.left_top.x) as usize;
-                                let dy = (pos.y - state.shown_rectangle.left_top.y) as usize;
+                                let dx = (pos.x - shown_rectangle.left_top.x) as usize;
+                                let dy = (pos.y - shown_rectangle.left_top.y) as usize;
                                 draw_axis_label(
                                     &mut rendered,
                                     bitmap,
@@ -759,7 +775,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                         let ShowRect {
                             left_top: ShowPoint { x: ltx, y: lty },
                             right_bottom: ShowPoint { x: rbx, y: rby },
-                        } = state.shown_rectangle;
+                        } = state.shown_rectangle.clone().unwrap_or_default();
                         let rbx = rbx - 1;
                         let rby = rby - 1;
                         let lt = data.overlay.font.render(&format!("{ltx}|{lty}"));
@@ -977,7 +993,8 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
             + self.boundary_between_data.thickness * (data_columns - 1);
         if column < plot_width {
             if let Some((key, data)) = data_sets.get(data_index) {
-                let shown_rectangle = &state.shown_rectangle - &CoordinatePoint { x: 0, y: 0 };
+                let shown_rectangle = &state.shown_rectangle.clone().unwrap_or_default()
+                    - &CoordinatePoint { x: 0, y: 0 };
                 let delta = shown_rectangle.delta();
                 let width_per_point = width_per_data / delta.x;
                 let height_per_point = height_per_data / delta.y;
@@ -1002,7 +1019,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                         if column + boundary_thickness >= offset_x {
                             is_boundary = true;
                         }
-                        state.shown_rectangle.left_top.x - 1
+                        shown_rectangle.left_top.x - 1
                     } else {
                         let column = column - offset_x;
                         let x = column / width_per_point;
@@ -1010,13 +1027,13 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                         if rem < boundary_thickness || rem + boundary_thickness >= width_per_point {
                             is_boundary = true;
                         }
-                        state.shown_rectangle.left_top.x + x as i32
+                        shown_rectangle.left_top.x + x as i32
                     };
                     let y = if row < offset_y {
                         if row + boundary_thickness >= offset_y {
                             is_boundary = true;
                         }
-                        state.shown_rectangle.left_top.y - 1
+                        shown_rectangle.left_top.y - 1
                     } else {
                         let row = row - offset_y;
                         let y = row / height_per_point;
@@ -1025,7 +1042,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                         {
                             is_boundary = true;
                         }
-                        state.shown_rectangle.left_top.y + y as i32
+                        shown_rectangle.left_top.y + y as i32
                     };
                     RenderPoint {
                         coordinate: CoordinatePoint { x, y },
@@ -1047,7 +1064,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                         if column + boundary_thickness >= offset_x {
                             is_boundary = true;
                         }
-                        state.shown_rectangle.left_top.x - 1
+                        shown_rectangle.left_top.x - 1
                     } else {
                         let column = column - offset_x;
                         let x = column / width_per_point;
@@ -1055,7 +1072,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                         if rem < boundary_thickness || rem + boundary_thickness >= width_per_point {
                             is_boundary = true;
                         }
-                        state.shown_rectangle.left_top.x + x as i32
+                        shown_rectangle.left_top.x + x as i32
                     };
                     let y = row * delta.y / height_per_data;
                     let y = shown_rectangle.left_top.y + y as i32;
@@ -1082,7 +1099,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                         if row + boundary_thickness >= offset_y {
                             is_boundary = true;
                         }
-                        state.shown_rectangle.left_top.y - 1
+                        shown_rectangle.left_top.y - 1
                     } else {
                         let row = row - offset_y;
                         let y = row / height_per_point;
@@ -1091,7 +1108,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                         {
                             is_boundary = true;
                         }
-                        state.shown_rectangle.left_top.y + y as i32
+                        shown_rectangle.left_top.y + y as i32
                     };
                     RenderPoint {
                         coordinate: CoordinatePoint { x, y },
@@ -1243,7 +1260,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
     }
 
     pub(crate) fn home(&self, state: &mut MultimapState<Key>) {
-        state.shown_rectangle = home_rect(&self.data, &state.to_plot);
+        state.shown_rectangle = Some(home_rect(&self.data, &state.to_plot));
     }
 }
 
@@ -1347,7 +1364,7 @@ fn render_simple_tests() {
     let width = 66;
     let height = 23;
     let state = dummy_data().default_state();
-    let rendered = dummy_data().render(width, height, &state).unwrap();
+    let rendered = dummy_data().render(width, height, &mut state).unwrap();
     dbg!((width, height));
     for (i, line) in rendered
         .chunks(width)
