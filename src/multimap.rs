@@ -876,17 +876,19 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
                     };
                     let target_center = (height * i / (count - 1)) as i32;
                     let top = target_center - f.height / 2;
-                    let top = top.clamp(0, height as i32 - f.height) as usize;
-                    let left = std::cmp::max(0, width as i32 - f.width) as usize;
-                    draw_axis_label(
-                        &mut rendered,
-                        &f,
-                        left,
-                        top,
-                        render_width,
-                        font.background_is_transparent,
-                        &self.background,
-                    );
+                    if height as i32 > f.height && width as i32 > f.width {
+                        let top = top.clamp(0, height as i32 - f.height) as usize;
+                        let left = std::cmp::max(0, width as i32 - f.width) as usize;
+                        draw_axis_label(
+                            &mut rendered,
+                            &f,
+                            left,
+                            top,
+                            render_width,
+                            font.background_is_transparent,
+                            &self.background,
+                        );
+                    }
                 }
             }
         }
