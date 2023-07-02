@@ -1147,7 +1147,7 @@ impl<Key: std::hash::Hash + Eq + Clone, Color: Clone + GammyMultiplyable + BitMa
         } else if let Some((g, thickness, (lower, upper))) = &self.colorbar {
             if column + thickness >= width {
                 let relative_distance = (row as f32) / (height as f32); // this is a number between 0 and 1
-                let f = g.fetch_value(*lower, *upper, relative_distance);
+                let f = g.fetch_value(*lower, *upper, 1. - relative_distance);
                 crate::MultiMapPosition::Colorbar(f)
             } else {
                 crate::MultiMapPosition::NotHovering
