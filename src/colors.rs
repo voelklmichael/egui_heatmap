@@ -2,6 +2,11 @@
 use egui::Color32 as Color;
 pub use oklab::Oklab;
 
+/// fetch one of the distinguishable colors
+/// this loops around automatically
+pub fn get_distinguishable_color(index: usize) -> Color {
+    DISTINGUISHABLE_COLORS[index % DISTINGUISHABLE_COLORS.len()]
+}
 /// This is a list of distinguisable colors.
 /// Source: https://en.m.wikipedia.org/wiki/Help:Distinguishable_colors
 pub const DISTINGUISHABLE_COLORS: [Color; 26] = [

@@ -338,6 +338,7 @@ pub enum RenderProblem {
     CountIsZero,
     WidthSmallerThanColorBar,
     NoData,
+    ClipboardIssue(String),
 }
 
 pub(crate) struct ShowMultiMapSettings<Color> {

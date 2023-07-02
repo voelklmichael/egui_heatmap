@@ -582,7 +582,8 @@ impl<Key: std::hash::Hash + Clone + Eq + Debug> MultiBitmapWidget<Key> {
                         bytes: bytes.into(),
                     });
                     if let Err(e) = r {
-                        panic!("Failed to copy to clipboard: {e}");
+                        state.render_problem =
+                            Some(RenderProblem::ClipboardIssue(format!("{e:?}")));
                     }
                 }
             }
